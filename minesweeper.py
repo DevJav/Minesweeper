@@ -20,34 +20,22 @@ class Minesweeper:
 
         for x in range(self.height):
             for y in range(self.width):
-                if self.grid[x,y] != 10:
+                if self.grid[x, y] != 10:
                     mine_counter = 0
-                    if x > 0 and self.grid[x-1,y] == 10:
-                        mine_counter += 1
-                    if x < self.height - 1 and self.grid[x+1,y] == 10:
-                        mine_counter += 1
-                    if y > 0 and self.grid[x,y-1] == 10:
-                        mine_counter += 1
-                    if y < self.width - 1 and self.grid[x,y+1] == 10:
-                        mine_counter += 1
+                    directions = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, -1), (-1, 1), (1, -1)]
+                    for dx, dy in directions:
+                        new_x, new_y = x + dx, y + dy
+                        if 0 <= new_x < self.height and 0 <= new_y < self.width and self.grid[new_x, new_y] == 10:
+                            mine_counter += 1
+                    self.grid[x, y] = mine_counter
 
-                    if x > 0 and y < self.width - 1 and self.grid[x-1,y+1] == 10:
-                        mine_counter += 1
-                    if x < self.height - 1 and y < self.width - 1 and self.grid[x+1,y+1] == 10:
-                        mine_counter += 1
-                    if x > 0 and y > 0 and self.grid[x-1,y-1] == 10:
-                        mine_counter += 1
-                    if x < self.height - 1 and y > 0 and self.grid[x+1,y-1] == 10:
-                        mine_counter += 1
-
-                    self.grid[x,y] = mine_counter
 
     def get_grid(self):
         return self.hidden_grid
     
     def get_remaining_mines(self):
         unexplored_grid = self.hidden_grid == -33
-        number_of_unexplored_cells = unexplored_grid.cumsum()[-1] == self.number_of_mines
+        number_of_unexplored_cells = unexplored_grid.cumsum()[-1]
         if (number_of_unexplored_cells == self.number_of_mines):
             print("You win!")
             exit()
@@ -62,26 +50,20 @@ class Minesweeper:
         return
             
     def compute_input(self, x, y):
-        self.evaluated_cells.append((x,y))
-        value = self.grid[x,y]
-        if value == 0:
-            if x < self.height - 1 and ((x+1,y) not in self.evaluated_cells):
-                self.input_xy(x+1,y)
-            if x > 0 and ((x-1,y) not in self.evaluated_cells):
-                self.input_xy(x-1,y)
-            if y < self.width - 1 and ((x,y+1) not in self.evaluated_cells):
-                self.input_xy(x,y+1)
-            if y > 0 and ((x,y-1) not in self.evaluated_cells):
-                self.input_xy(x,y-1)
-            if x > 0 and y < self.width - 1 and (x-1,y+1) not in self.evaluated_cells:
-                self.input_xy(x-1,y+1)
-            if x < self.height - 1 and y < self.width - 1 and (x+1,y+1) not in self.evaluated_cells:
-                self.input_xy(x+1,y+1)
-            if x > 0 and y > 0 and (x-1,y-1) not in self.evaluated_cells:
-                self.input_xy(x-1,y-1)
-            if x < self.height - 1 and y > 0 and (x+1,y-1) not in self.evaluated_cells:
-                self.input_xy(x+1,y-1)
-        self.hidden_grid[x,y] = value
+        cells_to_evaluate = [(x,y)]
+        while cells_to_evaluate:
+            x, y = cells_to_evaluate.pop()
+            value = self.grid[x,y]
+            
+            if value == 0:
+                directions = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, -1), (-1, 1), (1, -1)]
+                for dx, dy in directions:
+                    new_x, new_y = x + dx, y + dy
+                    if 0 <= new_x < self.height and 0 <= new_y < self.width and ((new_x, new_y) not in self.evaluated_cells) and ((new_x, new_y) not in cells_to_evaluate):
+                        cells_to_evaluate.append((new_x, new_y))
+
+            self.hidden_grid[x,y] = value
+            self.evaluated_cells.append((x,y))
 
         return self.hidden_grid
 
@@ -89,12 +71,12 @@ def update_canvas(tk, grid):
     for x in range(height):
         for y in range(width):
             if grid[x,y] == -33:
-                color = "black"
+                color = "purple"
             else:
                 color = "white"
-            tk.create_rectangle(y*20,x*20,y*20+20,x*20+20,activefill=color, fill=color)
+            tk.create_rectangle(y*rect_size,x*rect_size,y*rect_size+rect_size,x*rect_size+rect_size,activefill=color, fill=color)
             if grid[x,y] != -33 and grid[x,y] != 0:
-                tk.create_text(y*20+10,x*20+10,text=str(int(grid[x,y])))
+                tk.create_text(y*rect_size+(rect_size/2),x*rect_size+(rect_size/2),text=str(int(grid[x,y])))
             tk.pack()
 
 def get_click(a):
@@ -104,9 +86,9 @@ def get_click(a):
     update_canvas(tk, grid)
     game.get_remaining_mines()
 
-height = 30
+height = 20
 width = 20
-n_mines = 90
+n_mines = 10
 rect_size = 20
 game = Minesweeper(height,width,n_mines)
 game.new_game()
