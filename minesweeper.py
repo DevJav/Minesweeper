@@ -42,8 +42,6 @@ class Minesweeper:
 
                     self.grid[x,y] = mine_counter
 
-        print(self.grid)
-
     def get_grid(self):
         return self.hidden_grid
     
@@ -108,7 +106,7 @@ def get_click(a):
 
 height = 30
 width = 20
-n_mines = 30
+n_mines = 90
 rect_size = 20
 game = Minesweeper(height,width,n_mines)
 game.new_game()
